@@ -7,7 +7,7 @@ import java.util.UUID
 @Table(name = "notes")
 data class Note (
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(nullable = false, updatable = false)
     val id: String = UUID.randomUUID().toString(),
     @Column(nullable = false, length = 200)
     val title: String,
