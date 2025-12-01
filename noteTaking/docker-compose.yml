@@ -1,0 +1,45 @@
+services:
+  # 1. PostgreSQL Database Service
+  db:
+    image: postgres:15-alpine
+    container_name: postgres-db
+    restart: always
+    environment:
+      POSTGRES_DB: ${SPRING_DATASOURCE_URL:-mydatabase}
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME:-myuser}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-mypassword}
+      POSTGRES_HOST_AUTH_METHOD: trust # good for testing, but disable in production
+    volumes:
+      # Optional: Persist data on your host machine in a volume named 'postgres_data'
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      # Optional: Expose the DB port for direct access (e.g., from a GUI tool)
+      - "5432:5432"
+
+  # 2. Spring Boot Application Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kotlin-spring-app
+    # Ensure the DB container is up and running before the app starts
+    depends_on:
+      - db
+    environment:
+      # Map environment variables for the application
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME:-mydatabase}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-myuser}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-mypassword}
+    ports:
+      # Map the container's 8080 port to the host's 8080 port
+      - "8080:8080"
+    # Optional: If you need to debug or check the application logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  # Define the volume for persistent database storage
+  postgres_data:
